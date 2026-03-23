@@ -439,6 +439,9 @@
 
 	const AUTO_ACCEPT_CONFIGS = [
 		{ id: 'accept', label: 'Accept', defaultEnabled: false },
+		{ id: 'accept all', label: 'Accept all', defaultEnabled: true },
+		{ id: 'always allow', label: 'Always Allow', defaultEnabled: true },
+		{ id: 'allow this conversation', label: 'Allow This Conversation', defaultEnabled: true },
 		{ id: 'retry', label: 'Retry', defaultEnabled: true },
 		{ id: 'run', label: 'Run', defaultEnabled: true },
 		{ id: 'apply', label: 'Apply', defaultEnabled: true },
@@ -560,6 +563,7 @@
 	// ===== 创建设置面板 =====
 	function createSettingsUI(panelEl) {
 		if (panelEl.querySelector('#ab-settings-btn')) return;
+		const autoAcceptPatternControls = {};
 
 		// 悬浮按钮
 		const btn = el('button'); btn.id = 'ab-settings-btn'; btn.title = 'Antigravity Better Settings';
@@ -728,6 +732,7 @@
 			const isOn = currentSettings.autoAcceptPatterns[c.id];
 			const lbl = el('label', 'ab-pattern-item' + (isOn ? ' active' : ''));
 			const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = isOn;
+			autoAcceptPatternControls[c.id] = { checkbox: cb, label: lbl };
 			cb.addEventListener('change', () => { currentSettings.autoAcceptPatterns[c.id] = cb.checked; lbl.classList.toggle('active', cb.checked); saveSettings(currentSettings); });
 			lbl.appendChild(cb); lbl.appendChild(el('span', null, c.label)); patternGrid.appendChild(lbl);
 		});
@@ -960,7 +965,7 @@
 	}
 
 	// ===== 自动操作功能 =====
-	let autoAcceptObserver = null;
+	let autoAcceptObserver = null, autoAcceptPermissionTimer = null, autoAcceptCommandTimer = null;
 	function isAutoAcceptButton(btn) {
 		const text = (btn.textContent || '').trim().toLowerCase();
 		if (!text || text.length > 50) return false;
@@ -988,6 +993,95 @@
 		const list = currentSettings.bannedCommands || [];
 		return list.some(p => p && text.toLowerCase().includes(p.toLowerCase()));
 	}
+	function isDiffConfirmationArea(btn) {
+		let node = btn;
+		for (let depth = 0; node && depth < 6; depth++) {
+			const text = (node.textContent || '').toLowerCase();
+			const className = typeof node.className === 'string' ? node.className : '';
+			if (className.includes('outline-solid') && className.includes('justify-between') && text.includes('file with changes') && text.includes('reject all') && text.includes('accept all')) return true;
+			node = node.parentElement;
+		}
+		return false;
+	}
+	function findDiffAcceptAllTarget(scope) {
+		const root = scope || document.querySelector('.antigravity-agent-side-panel');
+		if (!root) return null;
+		return Array.from(root.querySelectorAll('span')).find(el => {
+			const text = (el.textContent || '').trim().toLowerCase();
+			const className = typeof el.className === 'string' ? el.className : '';
+			return text === 'accept all' && className.includes('cursor-pointer') && isDiffConfirmationArea(el);
+		});
+	}
+	function normalizeAutoAcceptText(text) {
+		return (text || '').toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '').trim();
+	}
+	function isVisibleEnabledActionElement(el) {
+		if (!el) return false;
+		const style = window.getComputedStyle(el);
+		const rect = el.getBoundingClientRect();
+		return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0 && !el.disabled && el.getAttribute('aria-disabled') !== 'true';
+	}
+	function resolvePermissionClickTarget(candidate, root) {
+		if (!candidate) return null;
+		const directButton = candidate.matches('button, [role="button"]') ? candidate : null;
+		const nestedButton = candidate.querySelector('button, [role="button"]');
+		const clickableSelf = typeof candidate.className === 'string' && candidate.className.includes('cursor-pointer') ? candidate : null;
+		const targets = [directButton, nestedButton, candidate.closest('button, [role="button"]'), candidate.closest('[class*="cursor-pointer"]'), clickableSelf].filter(Boolean);
+		return targets.find(el => root.contains(el) && !el.closest('#ab-overlay') && !el.closest('#ab-modal') && isVisibleEnabledActionElement(el));
+	}
+	function findScopedPermissionTarget(scope, expectedText) {
+		const root = scope || document.querySelector('.antigravity-agent-side-panel');
+		if (!root) return null;
+		const normalizedExpected = normalizeAutoAcceptText(expectedText);
+		const candidates = Array.from(root.querySelectorAll('button, [role="button"], span, div')).filter(el => {
+			if (el.closest('#ab-overlay') || el.closest('#ab-modal')) return false;
+			return normalizeAutoAcceptText(el.textContent) === normalizedExpected;
+		});
+		for (const candidate of candidates) {
+			const target = resolvePermissionClickTarget(candidate, root);
+			if (target) return target;
+		}
+		return null;
+	}
+	async function performScopedPermissionAutoAccept(scope) {
+		if (!scope || !currentSettings.autoAcceptEnabled) return;
+		if (!currentSettings.autoAcceptUnlimited && currentSettings.autoAcceptRemaining <= 0) return;
+		if (currentSettings.autoAcceptPatterns['allow this conversation'] && (currentSettings.autoAcceptUnlimited || currentSettings.autoAcceptRemaining > 0)) {
+			const allowConversationTarget = findScopedPermissionTarget(scope, 'allow this conversation');
+			if (allowConversationTarget) {
+				allowConversationTarget.click();
+				if (scope._abUpdateStats) scope._abUpdateStats({ clicks: 1 });
+				await new Promise(r => setTimeout(r, 100));
+			}
+		}
+		if (currentSettings.autoAcceptPatterns['always allow'] && (currentSettings.autoAcceptUnlimited || currentSettings.autoAcceptRemaining > 0)) {
+			const alwaysAllowTarget = findScopedPermissionTarget(scope, 'always allow');
+			if (alwaysAllowTarget) {
+				alwaysAllowTarget.click();
+				if (scope._abUpdateStats) scope._abUpdateStats({ clicks: 1 });
+				await new Promise(r => setTimeout(r, 100));
+			}
+		}
+	}
+	async function performScopedCommandAutoAccept(scope) {
+		if (!scope || !currentSettings.autoAcceptEnabled) return;
+		if (!currentSettings.autoAcceptUnlimited && currentSettings.autoAcceptRemaining <= 0) return;
+		const buttons = scope.querySelectorAll('button');
+		for (const btn of buttons) {
+			if (!currentSettings.autoAcceptUnlimited && currentSettings.autoAcceptRemaining <= 0) break;
+			const text = (btn.textContent || '').trim().toLowerCase();
+			if (!/run|execute/i.test(text)) continue;
+			if (!isAutoAcceptButton(btn)) continue;
+			const nearby = findNearbyCommandText(btn);
+			if (isCommandBanned(nearby)) {
+				if (scope._abUpdateStats) scope._abUpdateStats({ blocked: 1 });
+				continue;
+			}
+			btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+			if (scope._abUpdateStats) scope._abUpdateStats({ clicks: 1 });
+			await new Promise(r => setTimeout(r, 100));
+		}
+	}
 	async function performAutoAccept(panelEl) {
 		if (!currentSettings.autoAcceptEnabled) return;
 		// 非无限模式下，剩余次数为0则停止
@@ -999,19 +1093,35 @@
 			if (!currentSettings.autoAcceptUnlimited && currentSettings.autoAcceptRemaining <= 0) break;
 			if (!isAutoAcceptButton(btn)) continue;
 			const text = (btn.textContent || '').trim().toLowerCase();
+			if (text === 'accept all' && !isDiffConfirmationArea(btn)) continue;
+			if (text === 'allow this conversation' || text === 'always allow') continue;
 			if (/run|execute/i.test(text)) { const nearby = findNearbyCommandText(btn); if (isCommandBanned(nearby)) { if (scope._abUpdateStats) scope._abUpdateStats({ blocked: 1 }); continue; } }
 			btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 			if (scope._abUpdateStats) scope._abUpdateStats({ clicks: 1 });
 			await new Promise(r => setTimeout(r, 100));
 		}
+		if (currentSettings.autoAcceptPatterns['accept all'] && (currentSettings.autoAcceptUnlimited || currentSettings.autoAcceptRemaining > 0)) {
+			const acceptAllTarget = findDiffAcceptAllTarget(scope);
+			if (acceptAllTarget) {
+				acceptAllTarget.click();
+				if (scope._abUpdateStats) scope._abUpdateStats({ clicks: 1 });
+				await new Promise(r => setTimeout(r, 100));
+			}
+		}
+		await performScopedCommandAutoAccept(scope);
+		await performScopedPermissionAutoAccept(scope);
 	}
 	function applyAutoAcceptSettings(panelEl) {
 		if (autoAcceptObserver) { autoAcceptObserver.disconnect(); autoAcceptObserver = null; }
+		if (autoAcceptPermissionTimer) { clearInterval(autoAcceptPermissionTimer); autoAcceptPermissionTimer = null; }
+		if (autoAcceptCommandTimer) { clearInterval(autoAcceptCommandTimer); autoAcceptCommandTimer = null; }
 		if (!currentSettings.autoAcceptEnabled) return;
 		const scope = panelEl || document.querySelector('.antigravity-agent-side-panel');
 		if (!scope) return;
 		autoAcceptObserver = new MutationObserver(() => { clearTimeout(window._abAATimer); window._abAATimer = setTimeout(() => performAutoAccept(panelEl), 500); });
-		autoAcceptObserver.observe(scope, { childList: true, subtree: true });
+		autoAcceptObserver.observe(scope, { childList: true, subtree: true, attributes: true, characterData: true });
+		autoAcceptPermissionTimer = setInterval(() => { performScopedPermissionAutoAccept(scope).catch(() => {}); }, 1000);
+		autoAcceptCommandTimer = setInterval(() => { performScopedCommandAutoAccept(scope).catch(() => {}); }, 1000);
 		performAutoAccept(panelEl);
 	}
 
