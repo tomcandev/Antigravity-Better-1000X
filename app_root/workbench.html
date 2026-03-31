@@ -991,6 +991,8 @@
 		if (!text || text.length > 50) return false;
 		// 排除下拉菜单触发器（如 "Always run" 按钮）
 		if (btn.hasAttribute('aria-haspopup')) return false;
+		// 排除列表项/建议按钮（带 title 且含 grow 的全宽按钮）
+		if (btn.title && btn.classList.contains('grow')) return false;
 		const patterns = Object.entries(currentSettings.autoAcceptPatterns).filter(([_, v]) => v).map(([k]) => k);
 		if (!patterns.length) return false;
 		const rejects = ['skip', 'reject', 'cancel', 'close', 'refine', 'dismiss', 'always'];
