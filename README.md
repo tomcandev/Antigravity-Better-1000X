@@ -36,6 +36,9 @@ By simply dropping **one HTML file** into your IDE's core structure, you can unl
 
 ### Option 1: Automated Script (Recommended)
 
+> **macOS users:**  
+> The deployment tool uses a multi-tier strategy (including native Finder delegation) to automatically bypass macOS security restrictions. You **do not** need to manually grant Full Disk Access to your Terminal.
+
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/tomcandev/Antigravity-Better-1000X.git
@@ -46,7 +49,7 @@ By simply dropping **one HTML file** into your IDE's core structure, you can unl
    ```bash
    python3 deploy_tool.py
    ```
-   > The tool will auto-detect your Antigravity installation on Windows/macOS, back up your original files, inject the customizations, and automatically restart Antigravity.
+   > The tool will auto-detect your Antigravity installation, back up the original file, inject the customizations, and prompt you to restart Antigravity.
 
 ### Option 2: Manual Installation (macOS Example)
 
