@@ -6,92 +6,44 @@
     <img src="https://img.shields.io/badge/version-0.2.10-brightgreen" alt="Version">
     <img src="https://img.shields.io/badge/dependencies-zero-green" alt="Zero Dependencies">
     <img src="https://img.shields.io/badge/file-single%20HTML-blue" alt="Single File">
-    <img src="https://img.shields.io/badge/target-Antigravity-purple" alt="Antigravity">
-    <img src="https://img.shields.io/github/license/tomcandev/Antigravity-Better-1000X" alt="License">
-    <br><br>
-    <a href="https://github.com/tomcandev/Antigravity-Better-1000X/releases"><img src="https://img.shields.io/badge/⬇️_Download-Latest_Release-brightgreen?style=for-the-badge" alt="Download"></a>
+  </p>
+  <p>
+    <i>Inspired by the original <a href="https://github.com/016/Antigravity-Better">016/Antigravity-Better</a> project.</i> 
+    <br>
+    <i>Refactored and maintained for English-first workflows.</i>
   </p>
 </div>
 
 ---
 
-## 📸 Screenshots
-
-<p align="center">
-  <img src="./screenshots/en_tab_appearance.png" width="400" alt="Appearance Settings">
-  <img src="./screenshots/en_tab_feature.png" width="400" alt="Feature Settings">
-</p>
-
----
-
 ## ✨ What is Antigravity-Better-1000X?
 
-**Antigravity-Better-1000X** is a lightweight, zero-dependency toolkit for customizing the AI chat panel in **Antigravity** - Google's new AI-powered IDE.
+**Antigravity-Better-1000X** is a lightweight toolkit for customizing the AI chat panel in Google's AI-powered IDE.
 
-We provide a **single HTML file** that you can drop into your IDE to unlock powerful customizations - without touching any source code or installing extensions.
+By simply dropping **one HTML file** into your IDE's core structure, you can unlock powerful chat panel customizations—without touching source code or installing complex extensions.
 
-You can freely customize this HTML file to build your own features. Following our pre-built framework makes modifications incredibly easy - just add your CSS rules and JS logic, and you're good to go!
-
-> 💡 **Philosophy**: We build the highway; you drive whatever car you want.
-
-### Compatibility Note
-
-- ✅ **Primary Target**: Antigravity (Google's AI IDE)
-  - **v0.2.x**: Supports IDE v1.18.3+ (New `workbench.html` architecture)
-  - **v0.1.x**: Supports older IDE versions(<1.18.3) (Legacy `cascade-panel.html` architecture)
-- ⚠️ **Potentially Compatible**: Other VS Code-based AI IDEs (Cursor, Windsurf, etc.) may work with modifications, but we cannot guarantee compatibility.
-
----
-
-## 🚀 Features
-
-### Release Timeline (Partial)
-
-- **v0.2.10**: Fixes the Undo icon rendering issue in conversations by allowing the required Google resources in the Content Security Policy. The fix proposal came from hanliangwei.
-- **v0.2.9**: Fixes accidental auto-clicks on conversation titles when creating a new conversation by skipping title buttons that carry both `title` and `grow`.
-- **v0.2.8**: Fixes the app version string that was still shown as `0.2.2`, and aligns documentation version info.
-- **v0.2.7**: Enhances update checks with dual-source fallback (GitHub API + backup API), shows current/remote version comparison, adds a download entry, and introduces an auto-dismiss system tool for corrupted-install warnings.
-- **v0.2.6**: Adds auto-accept rules for diff confirmations and permission prompts, with safer handling for `accept all`, `always allow`, and `allow this conversation`.
-- **v0.2.5**: Improves workbench UI, replaces emoji icons with inline SVG, and refines tab alignment, floating settings button, update-check button style, and close-button hit area.
-- **v0.2.4**: Fixes LaTeX inline formula rendering issue (#23).
-- **v0.2.3**: Adds a deployment tool for `workbench.html`.
-- **v0.2.2**: Fixes copy button misalignment and auto-accept click issues, and adds max-click limit with reset.
-- **v0.2.1**: Migrates to IDE v1.18.3+ `workbench.html` architecture with v0.1.7 feature parity.
-- **v0.1.7**: Stable legacy-architecture release (`cascade-panel.html`).
-- **v0.1.6**: Merges auto-retry capability into auto-accept.
-- **v0.1.5**: Adds LaTeX formula rendering.
-- **v0.1.4**: Adds font-size control and version check.
-- **v0.1.3**: Adds safety rules to block dangerous auto-executed commands.
-- **v0.1.2**: Adds auto-retry mechanism.
-- **v0.1.1**: First core feature set: custom colors, hotkey override, and English support.
-
-### For Developers
-
-- **Single-file architecture**: All CSS/JS/HTML in one file
-- **Zero build tools**: No npm, no bundler - just edit and replace
-- **Performance-first**: Disabled features = zero runtime cost
-- **Well-documented**: Clear code structure with comments
-- **Extensible**: Add your own features following simple patterns
+### Key Features
+- **Custom Fonts & Colors**: Dynamically set specific colors and font sizes for AI responses vs User queries.
+- **Auto-Accept Diff Operations**: Configurable automatic accept for diff operations to speed up repetitive code generation.
+- **Keyboard Shortcuts**: Map your own shortcuts (e.g., `Cmd + Enter`) for sending messages to the AI.
+- **LaTeX Math Support**: Automatic rendering of mathematical formulas in AI outputs.
+- **One-Click Copy**: Injected quick copy buttons for code blocks and outputs.
+- **Zero Overhead**: Fully vanilla JavaScript with disabled features costing exactly zero performance.
 
 ---
 
 ## 📦 Installation
 
-### Quick Start
+### Quick Start (macOS Example)
 
-1. **Locate the target file**
+1. **Locate the target file path in your IDE installation:**
    ```
-   macOS: /Applications/Antigravity.app/Contents/Resources/app/out/vs/code/electron-browser/workbench/workbench.html
-   Windows: [PathToAppFolder]/Antigravity/resources/app/out/vs/code/electron-browser/workbench/workbench.html
+   /Applications/Antigravity.app/Contents/Resources/app/out/vs/code/electron-browser/workbench/workbench.html
    ```
 
-2. **Backup & Replace**
+2. **Backup & Replace file via Terminal**
    ```bash
-   # Navigate to the installation directory
-   ## Mac os
    cd /Applications/Antigravity.app/Contents/Resources/app/out/vs/code/electron-browser/workbench/
-   ## Windows
-   cd [PathToAppFolder]/Antigravity/resources/app/out/vs/code/electron-browser/workbench/
 
    # Backup original
    cp workbench.html workbench.html.bak
@@ -100,36 +52,18 @@ You can freely customize this HTML file to build your own features. Following ou
    cp /path/to/Antigravity-Better-1000X/app_root/workbench.html ./
    ```
 
-3. **Restart Antigravity** - Done! 🎉
+3. **Restart your IDE** - Done! 🎉
 
-> ⚠️ **Note**: Every time Antigravity updates, it will overwrite the HTML file. You'll need to re-apply this replacement after each update.
-
-### 🛠️ Troubleshooting (Mac OS)
-
-If you encounter a **"File is damaged and should be moved to the Trash"** warning on Mac OS (especially in **v1.20.5**), follow these steps:
-
-1. Click **Cancel** to keep the file.
-2. Go to **System Settings** -> **Privacy & Security** -> **Security**.
-3. You should see a message saying "Antigravity was blocked...". Click **Allow Anyway** or **Open Anyway**.
-4. Open Antigravity again. When the dialog appears, select **Open** (you may need to **right-click** the app and select **Open** instead of using double-click).
-5. This only needs to be done once to grant permission.
-
-*Note: We have only tested this on macOS. Other platforms might encounter similar issues; please look for system-specific security permission solutions.*
+> ⚠️ **Note**: Every time the IDE updates, it will overwrite the HTML file. You'll need to re-apply this replacement after each update. Alternatively, use the included Python deployment tool `deploy_tool.py` to automate the replacement mapping.
 
 ---
 
-## 🛠️ Customization
+## 🛠️ Usage & Customization
 
-### Using the Settings Panel
-
-Click the **⚙️ floating button** on the right side of your chat panel to open settings.
-
-- Switch between **Appearance** and **Features** tabs
-- Expand/collapse each feature section
+Click the **⚙️ floating button** on the right side of your IDE chat panel to open the embedded Settings Menu. From there, you can toggle features on and off dynamically. 
 
 ### Adding Your Own Features
-
-Antigravity-Better-1000X is designed to be extended:
+You can freely customize the core `workbench.html` file to build your own tools. Antigravity-Better-1000X is designed with performance isolation in mind:
 
 ```html
 <style>
@@ -138,42 +72,20 @@ Antigravity-Better-1000X is designed to be extended:
 </style>
 
 <script>
-  // 2. Add your feature config
+  // 2. Add your config
   const YOUR_CONFIGS = [{ id: 'my-feature', ... }];
   
-  // 3. Implement your logic (respecting on/off state)
+  // 3. Implement your logic
   function applyYourFeature() {
     if (!currentSettings.yourFeatureEnabled) return;
-    // Your code here
+    // Your execution logic here...
   }
 </script>
 ```
 
 ---
 
-## 🤝 Contributing
+## 📜 Credits & License
 
-We welcome contributions! Whether it's:
-
-- 🐛 Bug reports
-- 💡 Feature ideas
-- 🔧 Pull requests
-- 📖 Documentation
-
----
-
-## 📜 License
-
-MIT License - Use it, modify it, share it.
-
----
-
-## 🔗 Links
-
-- 🐛 Issues: [GitHub Issues](https://github.com/tomcandev/Antigravity-Better-1000X/issues)
-
----
-
-<div align="center">
-  <sub>Built with ❤️ by the Antigravity-Better-1000X Team</sub>
-</div>
+- Original architectural concepts and inspiration by [016/Antigravity-Better](https://github.com/016/Antigravity-Better).
+- MIT License. Feel free to use, modify, and share.
