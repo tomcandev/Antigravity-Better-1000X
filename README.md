@@ -3,7 +3,7 @@
   <p><strong>Customize your Antigravity AI chat panel. Your IDE, your rules.</strong></p>
   <br>
   <p>
-    <img src="https://img.shields.io/badge/version-0.2.10-brightgreen" alt="Version">
+    <img src="https://img.shields.io/badge/version-0.2.11-brightgreen" alt="Version">
     <img src="https://img.shields.io/badge/dependencies-zero-green" alt="Zero Dependencies">
     <img src="https://img.shields.io/badge/file-single%20HTML-blue" alt="Single File">
   </p>

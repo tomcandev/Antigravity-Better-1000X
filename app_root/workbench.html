@@ -86,7 +86,7 @@
 	<link rel="stylesheet" href="../../../workbench/workbench.desktop.main.css">
 
 	<style>
-		/* ===== Antigravity Better v0.2.10 ===== */
+		/* ===== Antigravity Better v0.2.11 ===== */
 		:root {
 			--color-user-message: #60A5FA;
 			--color-ai-response: #E0E0E0;
@@ -306,6 +306,63 @@
 		.ab-stat-icon .ab-icon { width:18px; height:18px; }
 		.ab-accordion-icon { display:flex; align-items:center; transition:transform .3s; }
 		.ab-accordion-icon .ab-icon { width:12px; height:12px; color:var(--text-sub); }
+
+		/* ===== Agent Manager Pin Feature ===== */
+		/* Pin button injected next to each project row in the agent manager list */
+		body.agent-pin-enabled .ab-pin-btn {
+			display: inline-flex !important;
+			align-items: center;
+			justify-content: center;
+			width: 22px;
+			height: 22px;
+			background: none;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			opacity: 0;
+			transition: opacity .2s, background .2s, transform .15s;
+			vertical-align: middle;
+			margin-left: 4px;
+			flex-shrink: 0;
+			padding: 0;
+			color: var(--text-sub);
+			position: relative;
+			z-index: 10;
+		}
+		/* Show pin button on row hover */
+		body.agent-pin-enabled .ab-pin-row:hover .ab-pin-btn { opacity: 1; }
+		/* Pinned items always show the pin button fully opaque + accent color */
+		body.agent-pin-enabled .ab-pin-btn.pinned {
+			opacity: 1 !important;
+			color: var(--accent-color) !important;
+			transform: rotate(-45deg);
+		}
+		body.agent-pin-enabled .ab-pin-btn:hover { background: rgba(102,126,234,.15); color: var(--accent-color); }
+		body.agent-pin-enabled .ab-pin-btn:hover svg { transform: scale(1.1); }
+		body.agent-pin-enabled .ab-pin-btn svg { width:14px; height:14px; fill:currentColor; transition: transform .15s; }
+		/* Pinned row separator badge */
+		body.agent-pin-enabled .ab-pin-separator {
+			display: flex !important;
+			align-items: center;
+			gap: 6px;
+			padding: 4px 8px 2px 8px;
+			font-size: 10px;
+			color: var(--text-sub);
+			text-transform: uppercase;
+			letter-spacing: .06em;
+			border-bottom: 1px solid rgba(255,255,255,.06);
+			margin-bottom: 2px;
+			pointer-events: none;
+			user-select: none;
+		}
+		body.agent-pin-enabled .ab-pin-separator::before {
+			content: '';
+			display: inline-block;
+			width: 8px; height: 8px;
+			border-radius: 50%;
+			background: var(--accent-color);
+			opacity: .7;
+		}
 	</style>
 </head>
 
@@ -320,8 +377,8 @@
 <script>
 (function () {
 	'use strict';
-	/* ===== Antigravity-Better-1000X v0.2.10 ===== */
-	console.log('[AB] Antigravity-Better-1000X v0.2.10 Loading...');
+	/* ===== Antigravity-Better-1000X v0.2.11 ===== */
+	console.log('[AB] Antigravity-Better-1000X v0.2.11 Loading...');
 
 	// ===== Trusted Types Policy =====
 	let abPolicy = null;
@@ -335,6 +392,7 @@
 
 	// ===== SVG 图标字典 =====
 	const ICONS = {
+		pin: 'M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z',
 		appearance: 'M12,22C6.49,22,2,17.51,2,12S6.49,2,12,2s10,4.49,10,10S17.51,22,12,22z M12,4c-4.41,0-8,3.59-8,8s3.59,8,8,8s8-3.59,8-8S16.41,4,12,4z M15.5,17c-0.83,0-1.5-0.67-1.5-1.5S14.67,14,15.5,14s1.5,0.67,1.5,1.5S16.33,17,15.5,17z M12,17c-0.83,0-1.5-0.67-1.5-1.5S11.17,14,12,14s1.5,0.67,1.5,1.5S12.83,17,12,17z M8.5,17c-0.83,0-1.5-0.67-1.5-1.5S7.67,14,8.5,14s1.5,0.67,1.5,1.5S9.33,17,8.5,17z M15.5,11c-0.83,0-1.5-0.67-1.5-1.5S14.67,8,15.5,8s1.5,0.67,1.5,1.5S16.33,11,15.5,11z M12,11c-0.83,0-1.5-0.67-1.5-1.5S11.17,8,12,8s1.5,0.67,1.5,1.5S12.83,11,12,11z M8.5,11C7.67,11,7,10.33,7,9.5S7.67,8,8.5,8s1.5,0.67,1.5,1.5S9.33,11,8.5,11z',
 		features: 'M22.7,19l-9.1-9.1c0.9-2.3,0.4-5-1.5-6.9c-2-2-5-2.4-7.4-1.3L9,6L6,9L1.6,4.7C0.4,7.1,0.9,10.1,2.9,12.1c1.9,1.9,4.6,2.4,6.9,1.5l9.1,9.1c0.4,0.4,1,0.4,1.4,0l2.3-2.3C23.1,20,23.1,19.3,22.7,19z',
 		system: 'M19.14,12.94c0.04-0.31,0.06-0.63,0.06-0.94c0-0.31-0.02-0.63-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.37,4.8,11.69,4.8,12s0.02,0.63,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z',
@@ -385,13 +443,15 @@
 			update_checking: 'Checking...', update_latest: '✓ Already latest', update_found: '✓ New version found', update_failed: '✗ Check failed',
 			update_available: 'New version available', btn_download: 'Download',
 			latex_title: 'LaTeX Formulas', enable_latex: 'Enable LaTeX Rendering', latex_desc: 'Auto-render LaTeX math formulas in AI responses',
-			sys_tools_title: 'System Tools', lbl_dismiss_corrupt: 'Auto-dismiss corrupt warning'
+			sys_tools_title: 'System Tools', lbl_dismiss_corrupt: 'Auto-dismiss corrupt warning',
+			pin_title: 'Agent Manager Pin', enable_pin: 'Enable Project Pinning',
+			pin_desc: 'Click the 📌 pin icon next to a project in the Agent Manager to pin it to the top of the list.'
 		}
 	};
 	function t(key) { return T.en[key] || key; }
 
 	// ===== 配置 =====
-	const APP_VERSION = '0.2.10';
+	const APP_VERSION = '0.2.11';
 	const STORAGE_KEY = 'antigravity-better-settings';
 
 	const COLOR_CONFIGS = [
@@ -455,6 +515,8 @@
 		bannedCommands: [...DEFAULT_BANNED_COMMANDS],
 		autoAcceptStats: { clicks: 0, blocked: 0, verified: 0 },
 		autoUpdateEnabled: true, latexEnabled: false, dismissCorruptEnabled: true,
+		// ===== Agent Manager Pin =====
+		agentPinEnabled: false,
 	};
 
 	// ===== 存储 =====
@@ -789,6 +851,25 @@
 		bannedAcc.inner.appendChild(bannedBtnGroup); bannedAcc.inner.appendChild(bannedSaveStatus);
 		tabFeatures.appendChild(bannedAcc.item);
 
+		// -- Agent Manager Pin --
+		const pinAcc = createAccordion('pin_title', false, 'pin');
+		pinAcc.inner.appendChild(createMainToggle('enable_pin', currentSettings.agentPinEnabled, (v) => {
+			currentSettings.agentPinEnabled = v; saveSettings(currentSettings); applyAgentPinSettings();
+		}));
+		const pinDesc = el('div', 'ab-setting-desc', t('pin_desc')); pinDesc.dataset.i18n = 'pin_desc';
+		pinAcc.inner.appendChild(pinDesc);
+		// Clear all pins button
+		const pinClearRow = el('div'); pinClearRow.style.cssText = 'display:flex; align-items:center; justify-content:flex-end; margin-top:8px;';
+		const pinClearBtn = el('button', 'ab-btn secondary', '🗑 Clear All Pins'); pinClearBtn.style.cssText = 'flex:none; padding:4px 10px; font-size:11px;';
+		pinClearBtn.addEventListener('click', () => {
+			try { localStorage.removeItem('ab-pinned-agents'); } catch(e) {}
+			if (currentSettings.agentPinEnabled) { removeAgentPinButtons(); injectAgentPinButtons(); }
+			showToast('📌 All pins cleared', 2000);
+		});
+		pinClearRow.appendChild(pinClearBtn);
+		pinAcc.inner.appendChild(pinClearRow);
+		tabFeatures.appendChild(pinAcc.item);
+
 		// ============ Tab: 系统 ============
 		const tabSystem = tabContents['system'];
 		const verAcc = createAccordion('version_title', true, 'update');
@@ -859,6 +940,9 @@
 
 		console.log('[AB] ✅ 设置面板创建成功');
 
+		// expose showToast for pin clear button
+		panelEl._abShowToastFn = showToast;
+
 		// ===== 功能逻辑函数引用 (需要 panelEl) =====
 
 		// -- 更新统计 --
@@ -879,6 +963,198 @@
 		}
 		// 存入 panelEl 供外部调用
 		panelEl._abUpdateStats = updateStats;
+	}
+
+	// ===== Agent Manager Pin Feature =====
+	// Storage key for pinned project IDs
+	const PIN_STORAGE_KEY = 'ab-pinned-agents';
+	// MutationObserver reference — only active when feature is ON
+	let agentPinObserver = null;
+
+	/** Load pinned IDs set from localStorage */
+	function loadPinnedIds() {
+		try { return new Set(JSON.parse(localStorage.getItem(PIN_STORAGE_KEY) || '[]')); }
+		catch (e) { return new Set(); }
+	}
+	/** Save pinned IDs set to localStorage */
+	function savePinnedIds(set) {
+		try { localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify([...set])); } catch (e) {}
+	}
+
+	/**
+	 * Try to find a stable unique key for an agent project row.
+	 * We look for: data-agent-id, data-id, title attribute, or the trimmed text of the first text-bearing child.
+	 */
+	function getRowId(row) {
+		return row.dataset.agentId || row.dataset.id ||
+			row.getAttribute('title') ||
+			(row.querySelector('[title]') && row.querySelector('[title]').getAttribute('title')) ||
+			(row.textContent || '').replace(/[\s\n]+/g, ' ').trim().slice(0, 60);
+	}
+
+	/**
+	 * Inject pin 📌 buttons into every agent project row found in the agent manager.
+	 * Candidates: any list items/rows inside agent manager panels.
+	 * We try multiple selectors to be resilient to UI changes.
+	 */
+	function injectAgentPinButtons() {
+		if (!currentSettings.agentPinEnabled) return;
+		const pinnedIds = loadPinnedIds();
+
+		// Target: agent manager list containers
+		// These selectors cover the common Antigravity agent manager row patterns.
+		const rowSelectors = [
+			'.grow.overflow-hidden',         // common project name wrapper
+			'[class*="agent"] li',            // li inside agent panel
+			'[class*="project-item"]',        // explicit project items
+			'[class*="agent-manager"] [role="listitem"]', // listitem roles
+		];
+
+		const seen = new Set();
+		// Walk all candidates; mark parent containers as pin rows
+		rowSelectors.forEach(sel => {
+			let nodes;
+			try { nodes = document.querySelectorAll(sel); } catch(e) { return; }
+			for (const node of nodes) {
+				// Skip if already processed or inside our own overlay
+				if (node.closest('#ab-overlay') || node.closest('#ab-modal')) continue;
+				// Walk up to find the closest interactive row
+				const row = node.closest('li, [role="listitem"], [class*="item"]') || node.parentElement;
+				if (!row || seen.has(row)) continue;
+				seen.add(row);
+
+				// Already has pin button — just update its state
+				if (row.querySelector('.ab-pin-btn')) {
+					const existing = row.querySelector('.ab-pin-btn');
+					const rowId = getRowId(row);
+					existing.classList.toggle('pinned', pinnedIds.has(rowId));
+					existing.title = pinnedIds.has(rowId) ? 'Unpin project' : 'Pin to top';
+					continue;
+				}
+
+				row.classList.add('ab-pin-row');
+				row.style.position = 'relative';
+
+				// Create pin button using safe createElement (no innerHTML)
+				const pinBtn = document.createElement('button');
+				pinBtn.className = 'ab-pin-btn';
+				const svgNS = 'http://www.w3.org/2000/svg';
+				const svg = document.createElementNS(svgNS, 'svg');
+				svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', '14'); svg.setAttribute('height', '14');
+				const path = document.createElementNS(svgNS, 'path');
+				path.setAttribute('d', ICONS.pin); path.setAttribute('fill', 'currentColor');
+				svg.appendChild(path); pinBtn.appendChild(svg);
+
+				const rowId = getRowId(row);
+				const isPinned = pinnedIds.has(rowId);
+				pinBtn.classList.toggle('pinned', isPinned);
+				pinBtn.title = isPinned ? 'Unpin project' : 'Pin to top';
+
+				pinBtn.addEventListener('click', (e) => {
+					e.stopPropagation(); e.preventDefault();
+					const ids = loadPinnedIds();
+					const id = getRowId(row);
+					if (ids.has(id)) {
+						ids.delete(id);
+						pinBtn.classList.remove('pinned');
+						pinBtn.title = 'Pin to top';
+					} else {
+						ids.add(id);
+						pinBtn.classList.add('pinned');
+						pinBtn.title = 'Unpin project';
+					}
+					savePinnedIds(ids);
+					// Re-sort the list after toggling
+					sortPinnedRows(row.parentElement);
+				});
+
+				// Append after the first flex child (or at end of row)
+				const flexChild = row.querySelector('[class*="flex"], [class*="truncate"], span, p');
+				if (flexChild && flexChild.parentElement === row) {
+					row.insertBefore(pinBtn, flexChild.nextSibling);
+				} else {
+					row.appendChild(pinBtn);
+				}
+			}
+		});
+
+		// Sort all discovered parent lists
+		seen.forEach(row => {
+			if (row.parentElement && !row.parentElement._abPinSorted) {
+				sortPinnedRows(row.parentElement);
+			}
+		});
+	}
+
+	/**
+	 * Sort children of `listEl` so that pinned rows float to the top.
+	 * Injects a small "Pinned" separator label above pinned rows.
+	 */
+	function sortPinnedRows(listEl) {
+		if (!listEl) return;
+		const pinnedIds = loadPinnedIds();
+		if (!pinnedIds.size) {
+			// Remove separator if it exists and nothing pinned
+			const sep = listEl.querySelector('.ab-pin-separator');
+			if (sep) sep.remove();
+			listEl._abPinSorted = false;
+			return;
+		}
+		const rows = [...listEl.children].filter(c => c.classList.contains('ab-pin-row'));
+		if (!rows.length) return;
+
+		const pinned = rows.filter(r => pinnedIds.has(getRowId(r)));
+		const unpinned = rows.filter(r => !pinnedIds.has(getRowId(r)));
+		if (!pinned.length) {
+			const sep = listEl.querySelector('.ab-pin-separator');
+			if (sep) sep.remove();
+			listEl._abPinSorted = false;
+			return;
+		}
+
+		// Create or reuse separator
+		let sep = listEl.querySelector('.ab-pin-separator');
+		if (!sep) {
+			sep = document.createElement('div');
+			sep.className = 'ab-pin-separator';
+			sep.appendChild(document.createTextNode('Pinned'));
+		}
+
+		// Insert separator and pinned rows at the top of the list
+		listEl.insertBefore(sep, listEl.firstChild);
+		// Insert pinned rows after separator (reverse order to maintain original order)
+		pinned.slice().reverse().forEach(r => listEl.insertBefore(r, sep.nextSibling));
+		listEl._abPinSorted = true;
+	}
+
+	/** Remove all injected pin buttons and separators */
+	function removeAgentPinButtons() {
+		document.querySelectorAll('.ab-pin-btn').forEach(b => b.remove());
+		document.querySelectorAll('.ab-pin-separator').forEach(s => s.remove());
+		document.querySelectorAll('.ab-pin-row').forEach(r => {
+			r.classList.remove('ab-pin-row');
+			if (r.parentElement) r.parentElement._abPinSorted = false;
+		});
+	}
+
+	/** Toggle the agent pin feature on/off */
+	function applyAgentPinSettings() {
+		// Tear down existing observer first
+		if (agentPinObserver) { agentPinObserver.disconnect(); agentPinObserver = null; }
+		document.body.classList.toggle('agent-pin-enabled', currentSettings.agentPinEnabled);
+		if (!currentSettings.agentPinEnabled) {
+			// Feature off: remove all injected elements and stop
+			removeAgentPinButtons();
+			return;
+		}
+		// Feature on: inject buttons and observe DOM for new rows
+		injectAgentPinButtons();
+		agentPinObserver = new MutationObserver(() => {
+			clearTimeout(window._abPinTimer);
+			window._abPinTimer = setTimeout(injectAgentPinButtons, 250);
+		});
+		// Observe the whole body (agent manager can be anywhere)
+		agentPinObserver.observe(document.body, { childList: true, subtree: true });
 	}
 
 	// ===== 复制功能 =====
@@ -1415,6 +1691,7 @@
 		applyCopySettings(panelEl); applyHotkeySettings();
 		applyAutoAcceptSettings(panelEl);
 		if (currentSettings.latexEnabled) applyLatexSettings(panelEl);
+		if (currentSettings.agentPinEnabled) applyAgentPinSettings();
 		if (currentSettings.autoUpdateEnabled) setTimeout(checkForUpdate, 10000);
 	}
 	function waitForAgentPanel() {
