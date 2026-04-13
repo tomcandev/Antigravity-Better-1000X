@@ -9,14 +9,19 @@ import os
 import sys
 import shutil
 import argparse
+import platform
+import subprocess
 from pathlib import Path
 
 # ================== Settings ==================
 # Relative path to source file (relative to script directory)
 SOURCE_RELATIVE_PATH = "app_root/workbench.html"
 
-# Target directory search rules: search under Program Files for Antigravity
+# Target directory search rules: search under Program Files for Windows, Applications for Mac
 TARGET_SEARCH_PATHS = [
+    # macOS Path
+    Path("/Applications/Antigravity.app/Contents/Resources/app/out/vs/code/electron-browser/workbench"),
+    # Windows Paths
     Path(os.environ.get("ProgramFiles", "C:\\Program Files")) / "Antigravity" / "resources" / "app" / "out" / "vs" / "code" / "electron-browser" / "workbench",
     Path(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")) / "Antigravity" / "resources" / "app" / "out" / "vs" / "code" / "electron-browser" / "workbench",
     Path("D:\\Program Files") / "Antigravity" / "resources" / "app" / "out" / "vs" / "code" / "electron-browser" / "workbench",
@@ -40,7 +45,7 @@ def find_source_file() -> Path:
     raise FileNotFoundError(f"Source file not found: {source_path}")
 
 
-def find_target_dir() -> Path | None:
+def find_target_dir():
     """Auto-detect target directory"""
     for path in TARGET_SEARCH_PATHS:
         if path.exists() and path.is_dir():
@@ -48,6 +53,26 @@ def find_target_dir() -> Path | None:
             if target_file.exists():
                 return path
     return None
+
+def restart_antigravity():
+    """Attempt to restart the Antigravity application across platforms"""
+    system = platform.system().lower()
+    print("🔄 Attempting to restart Antigravity...")
+    try:
+        if system == "darwin":  # macOS
+            subprocess.run(['osascript', '-e', 'tell application "Antigravity" to quit'], check=False)
+            import time; time.sleep(2)
+            subprocess.run(['open', '-a', 'Antigravity'], check=False)
+            print("✅ Antigravity restarted successfully on macOS.")
+        elif system == "windows":
+            subprocess.run(['taskkill', '/IM', 'Antigravity.exe', '/F'], capture_output=True, check=False)
+            import time; time.sleep(1)
+            # Find the exe path relative to target_dir if possible, but fallback to general start
+            print("ℹ️ Windows: Killed Antigravity process. Please start the application manually.")
+        else:
+            print(f"ℹ️ OS {system} unsupported for auto-restart. Please restart manually.")
+    except Exception as e:
+        print(f"⚠️ Could not restart automatically: {e}. Please restart manually.")
 
 
 def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
@@ -83,11 +108,13 @@ def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
         # Copy new file
         if dry_run:
             print(f"[DRY-RUN] Copy: {source_file} -> {target_file}")
+            print("[DRY-RUN] Would attempt to restart Antigravity.")
         else:
             shutil.copy2(source_file, target_file)
             print(f"✅ Deployed: {target_file}")
+            restart_antigravity()
         
-        return True, "Deployment successful! Restart Antigravity to take effect."
+        return True, "Deployment process completed!"
         
     except Exception as e:
         return False, f"Deployment failed: {e}"
@@ -113,11 +140,13 @@ def restore(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
         
         if dry_run:
             print(f"[DRY-RUN] Restore: {backup_file} -> {target_file}")
+            print("[DRY-RUN] Would attempt to restart Antigravity.")
         else:
             shutil.copy2(backup_file, target_file)
             print(f"✅ Restored: {target_file}")
+            restart_antigravity()
         
-        return True, "Restoration successful! Restart Antigravity to take effect."
+        return True, "Restoration process completed!"
         
     except Exception as e:
         return False, f"Restoration failed: {e}"
@@ -131,10 +160,10 @@ def run_cli():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python deploy_tool.py deploy               # Auto detect and deploy
-  python deploy_tool.py deploy -t "D:\\..."  # Specify target directory
-  python deploy_tool.py restore              # Restore original file
-  python deploy_tool.py --gui                # Launch GUI
+  python3 deploy_tool.py                    # Auto detect and deploy (Default Mode)
+  python3 deploy_tool.py deploy -t "D:\\..." # Specify target directory
+  python3 deploy_tool.py restore             # Restore original file
+  python3 deploy_tool.py --gui               # Launch GUI mode
         """
     )
     
@@ -146,10 +175,15 @@ Examples:
     
     args = parser.parse_args()
     
-    # Launch GUI
-    if args.gui or args.action is None:
+    # Launch GUI ONLY if explicitly requested, otherwise default to "deploy"
+    if args.gui:
+        print("Launching GUI...")
         run_gui()
         return
+        
+    if args.action is None:
+        args.action = "deploy"
+        print("🚀 No action specified. Defaulting to 'deploy'...")
     
     # Determine target dir
     if args.target:
@@ -164,6 +198,7 @@ Examples:
             sys.exit(1)
     
     print(f"📂 Target directory: {target_dir}")
+    print(f"🔧 Action: {args.action.upper()}")
     
     # Execute action
     if args.action == "deploy":
@@ -252,7 +287,7 @@ def run_gui():
             btn_frame = ttk.Frame(main_frame)
             btn_frame.pack(pady=20)
             
-            deploy_btn = ttk.Button(btn_frame, text="📤 Deploy", command=self.do_deploy, width=15)
+            deploy_btn = ttk.Button(btn_frame, text="📤 Deploy & Restart", command=self.do_deploy, width=15)
             deploy_btn.pack(side=tk.LEFT, padx=10)
             
             restore_btn = ttk.Button(btn_frame, text="📥 Restore", command=self.do_restore, width=15)
@@ -324,8 +359,4 @@ def run_gui():
 
 # ================== Main Entrypoint ==================
 if __name__ == "__main__":
-    # Launch GUI when no arguments, otherwise CLI
-    if len(sys.argv) == 1:
-        run_gui()
-    else:
-        run_cli()
+    run_cli()

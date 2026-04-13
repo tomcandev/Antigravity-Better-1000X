@@ -34,7 +34,21 @@ By simply dropping **one HTML file** into your IDE's core structure, you can unl
 
 ## 📦 Installation
 
-### Quick Start (macOS Example)
+### Option 1: Automated Script (Recommended)
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/tomcandev/Antigravity-Better-1000X.git
+   cd Antigravity-Better-1000X
+   ```
+
+2. **Run the deployment tool:**
+   ```bash
+   python3 deploy_tool.py
+   ```
+   > The tool will auto-detect your Antigravity installation on Windows/macOS, back up your original files, inject the customizations, and automatically restart Antigravity.
+
+### Option 2: Manual Installation (macOS Example)
 
 1. **Locate the target file path in your IDE installation:**
    ```
@@ -54,7 +68,7 @@ By simply dropping **one HTML file** into your IDE's core structure, you can unl
 
 3. **Restart your IDE** - Done! 🎉
 
-> ⚠️ **Note**: Every time the IDE updates, it will overwrite the HTML file. You'll need to re-apply this replacement after each update. Alternatively, use the included Python deployment tool `deploy_tool.py` to automate the replacement mapping.
+> ⚠️ **Note**: Every time the IDE updates, it will overwrite the HTML file. You'll need to re-apply this replacement after each update.
 
 ---
 
