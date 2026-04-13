@@ -100,16 +100,17 @@ def copy_with_privileges(src: Path, dst: Path):
     print(f"\n\U0001f512 Permission denied writing to: {dst}")
 
     # Tier 2: Try sudo cp (works if Terminal has Full Disk Access)
-    print("\U0001f511 Trying sudo cp...")
-    subprocess.run(['sudo', 'xattr', '-cr', str(dst.parent)], capture_output=True, check=False)
-    result = subprocess.run(['sudo', 'cp', str(src), str(dst)], check=False)
-    if result.returncode == 0:
-        return
+    # [Disabled] We skip `sudo cp` as it generally fails without explicit Full Disk Access on newer macOS.
+    # print("\U0001f511 Trying sudo cp...")
+    # subprocess.run(['sudo', 'xattr', '-cr', str(dst.parent)], capture_output=True, check=False)
+    # result = subprocess.run(['sudo', 'cp', str(src), str(dst)], check=False)
+    # if result.returncode == 0:
+    #     return
 
     # Tier 3: osascript — Native macOS Finder copy
     # This bypasses Terminal Full Disk Access restrictions entirely by delegating to Finder
     if platform.system().lower() == "darwin":
-        print("\U0001f6e1\ufe0f  sudo cp failed. Delegating to macOS Finder...")
+        print("\U0001f6e1\ufe0f  Delegating to macOS Finder for copy...")
         # We use Finder's 'duplicate' command. Finder automatically handles SIP/FDA perfectly.
         result = subprocess.run([
             'osascript',
