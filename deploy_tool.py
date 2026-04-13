@@ -54,26 +54,96 @@ def find_target_dir():
                 return path
     return None
 
-def restart_antigravity():
-    """Attempt to restart the Antigravity application across platforms"""
-    system = platform.system().lower()
-    print("🔄 Attempting to restart Antigravity...")
+def ask_and_restart():
+    """Ask the user if they want to restart Antigravity."""
     try:
-        if system == "darwin":  # macOS
-            subprocess.run(['osascript', '-e', 'tell application "Antigravity" to quit'], check=False)
-            import time; time.sleep(2)
-            subprocess.run(['open', '-a', 'Antigravity'], check=False)
-            print("✅ Antigravity restarted successfully on macOS.")
-        elif system == "windows":
-            subprocess.run(['taskkill', '/IM', 'Antigravity.exe', '/F'], capture_output=True, check=False)
-            import time; time.sleep(1)
-            # Find the exe path relative to target_dir if possible, but fallback to general start
-            print("ℹ️ Windows: Killed Antigravity process. Please start the application manually.")
-        else:
-            print(f"ℹ️ OS {system} unsupported for auto-restart. Please restart manually.")
-    except Exception as e:
-        print(f"⚠️ Could not restart automatically: {e}. Please restart manually.")
+        answer = input("\n🔄 Restart Antigravity now? [y/n]: ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        answer = "n"
+    
+    if answer == "y":
+        system = platform.system().lower()
+        print("Restarting Antigravity...")
+        try:
+            if system == "darwin":  # macOS
+                import time
+                subprocess.run(['osascript', '-e', 'tell application "Antigravity" to quit'], check=False)
+                time.sleep(2)
+                subprocess.run(['open', '-a', 'Antigravity'], check=False)
+                print("✅ Antigravity restarted.")
+            elif system == "windows":
+                subprocess.run(['taskkill', '/IM', 'Antigravity.exe', '/F'], capture_output=True, check=False)
+                print("ℹ️ Windows: Antigravity process killed. Please reopen it manually.")
+            else:
+                print(f"ℹ️ OS {system} not supported for auto-restart. Please restart manually.")
+        except Exception as e:
+            print(f"⚠️ Could not restart: {e}. Please restart manually.")
+    else:
+        print("ℹ️ Please restart Antigravity manually to apply changes.")
 
+
+def copy_with_privileges(src: Path, dst: Path):
+    """
+    Copy a file with a 3-tier privilege escalation strategy:
+      1. Direct copy (no elevation needed)
+      2. sudo cp via Terminal (requires Terminal Full Disk Access)
+      3. osascript (native macOS admin dialog — works without Full Disk Access)
+    Raises on failure.
+    """
+    # Tier 1: Try direct copy
+    try:
+        shutil.copy2(src, dst)
+        return
+    except PermissionError:
+        pass
+
+    print(f"\n\U0001f512 Permission denied writing to: {dst}")
+
+    # Tier 2: Try sudo cp (works if Terminal has Full Disk Access)
+    print("\U0001f511 Trying sudo cp...")
+    subprocess.run(['sudo', 'xattr', '-cr', str(dst.parent)], capture_output=True, check=False)
+    result = subprocess.run(['sudo', 'cp', str(src), str(dst)], check=False)
+    if result.returncode == 0:
+        return
+
+    # Tier 3: osascript — opens native macOS Finder-style admin auth dialog
+    # This bypasses Terminal Full Disk Access restrictions entirely
+    if platform.system().lower() == "darwin":
+        print("\U0001f6e1\ufe0f  sudo cp failed. Trying macOS native admin dialog (osascript)...")
+        print("   A macOS password dialog should appear on screen.")
+        applescript_cmd = (
+            f'do shell script "cp \\"{src}\\" \\"{dst}\\"" '
+            f'with administrator privileges'
+        )
+        result = subprocess.run(
+            ['osascript', '-e', applescript_cmd],
+            check=False
+        )
+        if result.returncode == 0:
+            return
+
+    # All tiers failed — give clear guidance
+    print()
+    print("\u274c All automated copy attempts failed due to strict macOS security.")
+    if platform.system().lower() == "darwin":
+        print()
+        print("\U0001f4c2 Opening Finder windows for manual copy...")
+        print(f"   \U0001f449 Please drag and drop 'workbench.html' from the SOURCE folder into the TARGET folder.")
+        print(f"   Target: {dst.parent}")
+        # Open source file location and target directory in Finder
+        subprocess.run(['open', '-R', str(src)], check=False)
+        subprocess.run(['open', str(dst.parent)], check=False)
+    else:
+        print()
+        print("  Option A \u2014 Grant Full Disk Access to Terminal (one-time setup):")
+        print("    1. Open: System Settings \u2192 Privacy & Security \u2192 Full Disk Access")
+        print("    2. Enable: Terminal (or iTerm2 / whichever terminal you use)")
+        print("    3. Restart terminal, then re-run: python3 deploy_tool.py")
+        print()
+        print("  Option B \u2014 Copy manually:")
+        print(f"    sudo cp '{src}' '{dst}'")
+    
+    raise PermissionError("Copy failed even with sudo/osascript. See instructions above.")
 
 def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
     """
@@ -91,7 +161,7 @@ def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
         target_file = target_dir / TARGET_FILENAME
         backup_file = target_dir / (TARGET_FILENAME + BACKUP_SUFFIX)
         
-        # Check target file
+        # Check target file exists
         if not target_file.exists():
             return False, f"Target file not found: {target_file}"
         
@@ -100,7 +170,7 @@ def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
             if dry_run:
                 print(f"[DRY-RUN] Backup: {target_file} -> {backup_file}")
             else:
-                shutil.copy2(target_file, backup_file)
+                copy_with_privileges(target_file, backup_file)
                 print(f"✅ Backed up: {backup_file}")
         else:
             print(f"ℹ️ Backup already exists, skipping: {backup_file}")
@@ -108,13 +178,13 @@ def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
         # Copy new file
         if dry_run:
             print(f"[DRY-RUN] Copy: {source_file} -> {target_file}")
-            print("[DRY-RUN] Would attempt to restart Antigravity.")
+            print("[DRY-RUN] Would ask to restart Antigravity.")
         else:
-            shutil.copy2(source_file, target_file)
+            copy_with_privileges(source_file, target_file)
             print(f"✅ Deployed: {target_file}")
-            restart_antigravity()
+            ask_and_restart()
         
-        return True, "Deployment process completed!"
+        return True, "Deployment completed!"
         
     except Exception as e:
         return False, f"Deployment failed: {e}"
@@ -122,7 +192,7 @@ def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
 
 def restore(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
     """
-    Restore original file
+    Restore original file from backup.
     
     Args:
         target_dir: Target directory
@@ -140,13 +210,13 @@ def restore(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
         
         if dry_run:
             print(f"[DRY-RUN] Restore: {backup_file} -> {target_file}")
-            print("[DRY-RUN] Would attempt to restart Antigravity.")
+            print("[DRY-RUN] Would ask to restart Antigravity.")
         else:
-            shutil.copy2(backup_file, target_file)
+            copy_with_privileges(backup_file, target_file)
             print(f"✅ Restored: {target_file}")
-            restart_antigravity()
+            ask_and_restart()
         
-        return True, "Restoration process completed!"
+        return True, "Restoration completed!"
         
     except Exception as e:
         return False, f"Restoration failed: {e}"
