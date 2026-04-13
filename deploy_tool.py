@@ -106,19 +106,18 @@ def copy_with_privileges(src: Path, dst: Path):
     if result.returncode == 0:
         return
 
-    # Tier 3: osascript — opens native macOS Finder-style admin auth dialog
-    # This bypasses Terminal Full Disk Access restrictions entirely
+    # Tier 3: osascript — Native macOS Finder copy
+    # This bypasses Terminal Full Disk Access restrictions entirely by delegating to Finder
     if platform.system().lower() == "darwin":
-        print("\U0001f6e1\ufe0f  sudo cp failed. Trying macOS native admin dialog (osascript)...")
-        print("   A macOS password dialog should appear on screen.")
-        applescript_cmd = (
-            f'do shell script "cp \\"{src}\\" \\"{dst}\\"" '
-            f'with administrator privileges'
-        )
-        result = subprocess.run(
-            ['osascript', '-e', applescript_cmd],
-            check=False
-        )
+        print("\U0001f6e1\ufe0f  sudo cp failed. Delegating to macOS Finder...")
+        # We use Finder's 'duplicate' command. Finder automatically handles SIP/FDA perfectly.
+        result = subprocess.run([
+            'osascript',
+            '-e', 'tell application "Finder"',
+            '-e', f'duplicate file POSIX file "{src}" to folder POSIX file "{dst.parent}" with replacing',
+            '-e', 'end tell'
+        ], capture_output=True, check=False)
+        
         if result.returncode == 0:
             return
 
@@ -143,7 +142,7 @@ def copy_with_privileges(src: Path, dst: Path):
         print("  Option B \u2014 Copy manually:")
         print(f"    sudo cp '{src}' '{dst}'")
     
-    raise PermissionError("Copy failed even with sudo/osascript. See instructions above.")
+    raise PermissionError("Copy failed even with sudo/Finder. See instructions above.")
 
 def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
     """
