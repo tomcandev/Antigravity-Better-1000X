@@ -4,39 +4,39 @@ trigger: always_on
 
 # Project basic rule
 
-## 基本信息
-这是一个 **HTML 注入脚本项目**，核心目标是**自定义 VS Code AI 聊天窗口的 iframe 界面**（如修改 AI 回复颜色、添加复制按钮等）。
-项目采用 **HTML 直接覆盖** 模式，用户只需将修改后的 HTML 文件替换原始文件即可生效。
+## Basic Information
+This is an **HTML injection scripting project**. Its core objective is to **customize the VS Code AI chat window iframe interface** (e.g., modifying AI response colors, adding copy buttons).
+The project uses a **direct HTML replacement** model: users simply replace the original file with the modified HTML file for changes to take effect.
 
 ## Rules
-- **单文件原则**: 所有自定义 JS、CSS 和新增 HTML 代码都必须内联写入 `workbench.html` 文件中。
-- **零依赖**: 不依赖任何外部库或构建工具，保持纯原生 HTML/CSS/JS。
-- **KISS 原则**: 保持实现简单，方便用户复制替换文件。
-- **零基础友好**: 代码和注释需清晰，方便用户理解和二次修改。
+- **Single File Principle**: All custom JS, CSS, and added HTML logic must be written inline directly within the `workbench.html` file.
+- **Zero Dependencies**: Do not rely on any external libraries or build tools; use pure, native HTML/CSS/JS.
+- **KISS Principle**: Keep the implementation as simple as possible to make copying and replacing the file easy for users.
+- **Beginner Friendly**: Code and comments should be clear so users can easily understand and modify the code themselves.
 
-## 技术架构 (Architecture)
-1. **CSS 层**: 内联 `<style>` 标签，定义所有样式覆盖和自定义主题。
-2. **JS 层**: 内联 `<script>` 标签，实现 DOM 监听、样式注入、功能增强（如复制按钮）。
-3. **HTML 层**: 在原有结构基础上添加必要的容器或元素。
+## Architecture
+1. **CSS Layer**: Use inline `<style>` tags to define all style overrides and custom themes.
+2. **JS Layer**: Use inline `<script>` tags to implement DOM observation, style injection, and feature enhancements (like copy buttons).
+3. **HTML Layer**: Append necessary containers or elements alongside the existing DOM structure.
 
-## 开发环境
-- **运行环境**: Mac OS (宿主)
-- **项目根目录**: `/Volumes/eeBox/eeProject/lm802.4.14.6.25`
-- **应用目录**: `./app_root`
-- **核心文件**: `./app_root/workbench.html`
+## Development Environment
+- **OS**: Mac OS (Host)
+- **Project Root**: `/Volumes/eeBox/eeProject/lm802.4.14.6.25`
+- **App Director**: `./app_root`
+- **Core File**: `./app_root/workbench.html`
 
-## 设计要求
-- 主题上要求简洁、精致、专业、好看、大气
-- 功能需高度可配置，通过 JS 变量控制特性开关（如颜色、按钮）
+## Design Requirements
+- Themes should be clean, refined, professional, aesthetically pleasing, and grand.
+- Features should be highly configurable, with JS variables controlling feature toggles (like colors and buttons).
 
-## 工作流程自动匹配
-- 本项目涉及两个类型的工作, 根据收到的任务类型自动匹配下面的工作流程
-    - html页面核心修改/设计工作匹配 html-worker(.agent/workflows/html-worker.md)
-    - workbench.html 功能开发工作匹配 anti-better-worker(.agent/workflows/anti-better-worker.md)
-    - 其他未匹配工作则使用默认流程
+## Workflow Auto-matching
+- This project involves two types of workflows. Automatically map tasks to the workflows below:
+    - Core HTML page modifications/design work maps to `html-worker` (.agent/workflows/html-worker.md)
+    - `workbench.html` feature development maps to `anti-better-worker` (.agent/workflows/anti-better-worker.md)
+    - Otherwise use the default workflow.
 
-## 核心项目文件
-- `app_root/workbench.html`: AI 侧边栏的 HTML 文件，所有针对 V0.2 的自定义代码都写在这里。
+## Core Project File
+- `app_root/workbench.html`: The HTML file for the AI sidebar. All custom code for V0.2 is written here.
 
-## 用户使用方式
-用户将修改后的 `workbench.html` 文件复制替换到 IDE 对应位置即可生效。
+## How to Use
+Users simply copy and replace their IDE's equivalent file with the modified `workbench.html`.

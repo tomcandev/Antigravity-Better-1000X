@@ -320,8 +320,8 @@
 <script>
 (function () {
 	'use strict';
-	/* ===== Antigravity Better v0.2.10 ===== */
-	console.log('[AB] Antigravity Better v0.2.10 Loading...');
+	/* ===== Antigravity-Better-1000X v0.2.10 ===== */
+	console.log('[AB] Antigravity-Better-1000X v0.2.10 Loading...');
 
 	// ===== Trusted Types Policy =====
 	let abPolicy = null;
@@ -368,25 +368,6 @@
 
 	// ===== I18N 字典 =====
 	const T = {
-		zh: {
-			tab_appearance: '外观', tab_features: '功能', tab_system: '系统',
-			colors_title: '颜色自定义', enable_custom_colors: '启用自定义颜色',
-			lbl_user_msg: '用户消息', lbl_ai_resp: 'AI回复', lbl_code: '代码块', lbl_status: '操作状态', lbl_thinking: '思考过程',
-			fontsize_title: '字体大小', enable_custom_fontsize: '启用自定义字体大小', btn_sync: '同步全部',
-			copy_title: '一键复制', enable_copy: '启用复制按钮',
-			hotkey_title: '快捷键设置', enable_hotkey: '自定义发送快捷键', lbl_send_hotkey: '发送快捷键',
-			auto_accept_title: '自动操作', enable_auto_accept: '启用自动操作', auto_accept_desc: '选择要自动点击的按钮类型',
-			lbl_remaining: '剩余次数', lbl_unlimited: '无限', btn_clear_stats: '清零',
-			toast_remaining_zero: '自动操作已暂停：剩余次数已用完',
-			stat_clicks: '已点击', stat_blocked: '已阻止', stat_verified: '已验证',
-			banned_title: '安全规则', banned_desc: '包含以下关键词的命令将不会被自动执行（每行一个）',
-			btn_save: '保存', btn_reset: '重置', banned_saved: '✓ 安全规则已保存', banned_reset: '✓ 已重置为默认值',
-			version_title: '版本更新', lbl_auto_update: '启动时自动检测', lbl_manual_update: '手动检测更新', btn_check_update: '立即检测',
-			update_checking: '正在检测...', update_latest: '✓ 已是最新版本', update_found: '✓ 发现新版本', update_failed: '✗ 检测失败',
-			update_available: '新版本可用', btn_download: '下载更新',
-			latex_title: 'LaTeX 公式', enable_latex: '启用 LaTeX 渲染', latex_desc: '自动渲染 AI 回复中的 LaTeX 数学公式',
-			sys_tools_title: '系统工具', lbl_dismiss_corrupt: '自动关闭安装损坏提示'
-		},
 		en: {
 			tab_appearance: 'Appearance', tab_features: 'Features', tab_system: 'System',
 			colors_title: 'Colors', enable_custom_colors: 'Enable Custom Colors',
@@ -407,7 +388,7 @@
 			sys_tools_title: 'System Tools', lbl_dismiss_corrupt: 'Auto-dismiss corrupt warning'
 		}
 	};
-	function t(key) { return (T[currentSettings.lang] || T.zh)[key] || key; }
+	function t(key) { return T.en[key] || key; }
 
 	// ===== 配置 =====
 	const APP_VERSION = '0.2.10';
@@ -459,7 +440,7 @@
 	const DEFAULT_BANNED_COMMANDS = ['rm -rf /','rm -rf ~','rm -rf *','format c:','del /f /s /q','rmdir /s /q',':(){:|:&};:','dd if=','mkfs.','> /dev/sda','chmod -R 777 /'];
 
 	const defaultSettings = {
-		lang: 'zh',
+		lang: 'en',
 		masterEnabled: false,
 		colors: COLOR_CONFIGS.reduce((acc, c) => { acc[c.id] = { color: c.default, enabled: c.enabled }; return acc; }, {}),
 		fontsizeMasterEnabled: false,
@@ -557,13 +538,11 @@
 	}
 
 	// ===== I18N 更新 =====
-	let langSwitchBtn = null;
 	function updateLanguage() {
 		document.querySelectorAll('[data-i18n]').forEach(e => {
 			const key = e.dataset.i18n;
 			const val = t(key); if (val) e.textContent = val;
 		});
-		if (langSwitchBtn) langSwitchBtn.textContent = currentSettings.lang === 'zh' ? 'English' : '中文';
 	}
 
 	// ===== 创建设置面板 =====
@@ -572,7 +551,7 @@
 		const autoAcceptPatternControls = {};
 
 		// 悬浮按钮
-		const btn = el('button'); btn.id = 'ab-settings-btn'; btn.title = 'Antigravity Better Settings';
+		const btn = el('button'); btn.id = 'ab-settings-btn'; btn.title = 'Antigravity-Better-1000X Settings';
 		const svgNS = 'http://www.w3.org/2000/svg';
 		const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('viewBox', '0 0 24 24');
 		const path = document.createElementNS(svgNS, 'path');
@@ -586,7 +565,7 @@
 		// === Header ===
 		const header = el('div', 'ab-header');
 		const headerLeft = el('div', 'ab-header-left');
-		const brand = el('span', 'ab-brand', 'Antigravity Better');
+		const brand = el('span', 'ab-brand', 'Antigravity-Better-1000X');
 		const ver = el('span', 'ab-version', 'v' + APP_VERSION); brand.appendChild(ver);
 		const links = el('div', 'ab-brand-links');
 		const link1 = document.createElement('a'); link1.className = 'ab-brand-link'; link1.href = 'https://dpit.lib00.com'; link1.target = '_blank'; link1.textContent = 'dpit.lib00.com';
@@ -594,10 +573,8 @@
 		links.appendChild(link1); links.appendChild(link2);
 		headerLeft.appendChild(brand); headerLeft.appendChild(links);
 		const headerRight = el('div', 'ab-header-right');
-		langSwitchBtn = el('button', 'ab-lang-switch', currentSettings.lang === 'zh' ? 'English' : '中文');
-		langSwitchBtn.addEventListener('click', () => { currentSettings.lang = currentSettings.lang === 'zh' ? 'en' : 'zh'; saveSettings(currentSettings); updateLanguage(); });
 		const closeBtn = el('button', 'ab-close', '×');
-		headerRight.appendChild(langSwitchBtn); headerRight.appendChild(closeBtn);
+		headerRight.appendChild(closeBtn);
 		header.appendChild(headerLeft); header.appendChild(headerRight);
 		modal.appendChild(header);
 

@@ -1,66 +1,66 @@
 ---
-description: antigravity-better 功能开发工作流
+description: antigravity-better feature development workflow
 ---
 
-# Antigravity Better 开发工程师角色说明
+# Antigravity Better Developer Role Description
 
-## 角色
-你是专业的前端开发工程师, 专注于修改和增强 VS Code AI 聊天窗口的 iframe HTML 文件
+## Role
+You are an expert Frontend Developer, specifically focused on modifying and enhancing the `workbench.html` iframe for the VS Code AI chat sidebar.
 
-## 角色职责
-- 按照用户要求，完成 `workbench.html` 的功能开发和样式修改
-- 负责在单个 HTML 文件中实现所有自定义功能（JS/CSS 全部内联）
-- 保持代码简洁、可读、易于用户理解和二次修改
+## Responsibilities
+- Implement user feature requests and style changes inside `workbench.html`.
+- Consolidate all custom logic inside a single HTML file (CSS and JS must be completely inline).
+- Maintain code simplicity, readability, and ease-of-understanding for end users.
 
-## 角色工作流
-1. 充分分析用户需求，确定需要修改或添加的功能
-2. 读取 `app_root/workbench.html` 文件
-3. 对代码进行修改时，必须遵循 V0.2 的新规范要求（参见技术规则）
-4. 保存修改后的文件
-5. 以简洁的文本向用户反馈结果，并让用户手动将 `app_root/workbench.html` 复制到 IDE 的安装目录（Mac版默认路径：`/Applications/Antigravity.app/Contents/Resources/app/out/vs/code/electron-browser/workbench/workbench.html`）进行替换测试
+## Workflow
+1. Analyze user requirements thoroughly to determine new features or modifications required.
+2. Read the `app_root/workbench.html` file.
+3. Update the file while adhering strictly to the V0.2 constraints listed in the Technical Rules.
+4. Save the modified file.
+5. Provide a succinct text response to the user, instructing them to manually copy `app_root/workbench.html` into their IDE installation directory (Default max path: `/Applications/Antigravity.app/Contents/Resources/app/out/vs/code/electron-browser/workbench/workbench.html`) to test it.
 
-## 技术规则
-### 技术栈
-- 纯原生 HTML5、CSS3、JavaScript (ES6+)
-- 无外部依赖，无需构建工具
+## Technical Rules
+### Tech Stack
+- Pure native HTML5, CSS3, JavaScript (ES6+).
+- Zero external dependencies. No build tools.
 
-### 新版 V0.2 核心规范（必须遵守）
-1. **渲染架构与容器**：
-   - AI 面板现在直接嵌入到 VS Code 主 `workbench.html` 中。不再有 `#react-app` 容器。
-   - 所有的功能和样式必须限制在 `.antigravity-agent-side-panel` 范围内，以防止污染 VS Code 的其他界面。
-2. **CSP 与 Trusted Types**：
-   - IDE 开启了严格的内容安全策略（`require-trusted-types-for 'script'`）。
-   - 禁止直接使用 `innerHTML`、`outerHTML`。只能使用注册的 trusted html 策略，或者老老实实地使用 `document.createElement()` 和 `appendChild()`。
-3. **DOM 加载与监控**：
-   - 页面加载时代码立即执行，但此时侧边栏 DOM（`.antigravity-agent-side-panel`）可能尚未渲染。必须使用 `MutationObserver` 等待它出现后再执行初始化。
-4. **CSS 挂载方式**：
-   - JS 会把功能开启标志 (class) 加在 `document.body` 上（例如：`body.color-user-message`）。
-   - CSS 选择器必须结合 body 上的标志与面板类，例如：`body.color-user-message .antigravity-agent-side-panel .bg-gray-500\/15`。
-   - V0.2 下文本主力容器的类名为 `.leading-relaxed.select-text`（废弃了 V0.1 的 `.prose` 类）。思考区域附加有 `.opacity-70` 类。
-5. **UI 定位与挂载**：
-   - 原创的设置按钮、弹窗遮罩等必须通过 `appendChild` 挂载到 `.antigravity-agent-side-panel` 内。
-   - 侧边栏本身带有 `position: absolute` 定位，自定义元素可以使用 `position: absolute` 实现相对于聊天面板的精确定位。切勿用 `!important` 覆盖侧边栏原本的 `position`。
+### Core V0.2 Specs (Mandatory)
+1. **Rendering Architecture**:
+   - The AI panel is embedded directly into the VS Code main `workbench.html`. There is no `#react-app` container.
+   - All customizations MUST be scoped inside the `.antigravity-agent-side-panel` to prevent poisoning the rest of VS Code.
+2. **CSP and Trusted Types**:
+   - The IDE enforces a strict CSP (`require-trusted-types-for 'script'`).
+   - Do NOT use `innerHTML` or `outerHTML` directly. You must use the registered trusted HTML policy, or stick to `document.createElement()` and `appendChild()`.
+3. **DOM Loading & Observation**:
+   - The script runs instantly, but the sidebar DOM (`.antigravity-agent-side-panel`) might not exist yet. Use a `MutationObserver` to wait for its initialization.
+4. **CSS Mounting Scheme**:
+   - JS toggles features on and off by appending classes to `document.body` (e.g. `body.color-user-message`).
+   - CSS properties must be chained with the body class and sidebar class: `body.color-user-message .antigravity-agent-side-panel .bg-gray-500\/15`.
+   - In V0.2, the primary text container uses `.leading-relaxed.select-text` (V0.1's `.prose` is deprecated). The reasoning/thinking UI uses `.opacity-70`.
+5. **UI Positioning**:
+   - Custom overlay elements or setting buttons must be appended to `.antigravity-agent-side-panel`.
+   - The sidebar itself has `position: absolute`. Custom elements can safely use `position: absolute` for relative placement within the chat panel. NEVER override the sidebar's default `position` property with `!important`.
 
-### 性能设计原则（重要）
-**核心要求：未启用的功能零性能损耗**
+### Performance Principles (Critical)
+**Core Rule: Disabled features must have ZERO performance cost.**
 
-即使项目包含数百项功能，用户只启用其中1个时，其余功能绝对不能对性能产生影响。
+Even if the project has hundreds of features, enabling just 1 feature must not cause the rest to degrade performance.
 
-**实现规范：**
-1. **CSS控制**：通过 `body.feature-xxx` 选择器控制，未开启时样式绝不触发。
-2. **JS隔离**：禁用状态下，切勿运行任何对应功能的 JS 逻辑，不要初始化相关的监听器或观察器。
-3. **MutationObserver管理**：
-   - 如需使用，只在功能开启时创建、禁用时 disconnect。
-   - 必须优先使用统一调度机制或共享 Observer，尽量避免多个 Observer 监控全页面导致性能崩溃。
-4. **事件与定时器**：未启用的功能不得保留任何事件监听，不得存在任何活动的 `setInterval/setTimeout`。
+**Implementation constraints:**
+1. **CSS Scope**: All CSS rules must require the `body.feature-xxx` prefix so they simply don't trigger when off.
+2. **JS Isolation**: Never run JS logic, build observers, or attach listeners for disabled features.
+3. **MutationObserver Limits**:
+   - Instantiate Observers ONLY when a feature is toggled on, and properly `disconnect()` them when toggled off.
+   - Prefer shared/unified Observers over spawning multiple Observers monitoring the entire document.
+4. **Timers & Events**: Disabled features cannot harbor latent `setIntervals/setTimeout` loops or lingering event listeners.
 
-**验证标准：** 禁用所有定制功能后，自定义 JS 应执行完毕立即休息，不在后台驻留活动事件。
+**Testing Standard**: When all features are disabled, the custom JS payload should terminate cleanly without leaving orphaned listeners.
 
-### 开发注意事项
-- 代码必须内联（写在 HTML 内的 `<style>` 和 `<script>` 中），不能引用外部文件
-- 保持良好的代码注释及组织结构，方便用户修改与理解
-- 提供详细清晰的“技术验证”面板和错误捕捉机制
+### Development Notes
+- All code MUST be inline (`<style>` and `<script>` blocks). No external file loading.
+- Comment code heavily so users know how to interact with it.
+- Include robust error-catching.
 
-### 文件路径
-- 项目根目录: `/Volumes/eeBox/eeProject/lm802.4.14.6.25`
-- 核心文件: `app_root/workbench.html`
+### Paths
+- Project root: `/Volumes/eeBox/eeProject/lm802.4.14.6.25`
+- Target file: `app_root/workbench.html`

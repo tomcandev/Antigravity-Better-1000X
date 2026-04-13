@@ -1,20 +1,15 @@
 <div align="center">
-  <h1>🚀 Antigravity Better</h1>
-  <p><strong>自定义你的 Antigravity AI 聊天面板。你的 IDE，你做主。</strong></p>
+  <h1>🚀 Antigravity-Better-1000X</h1>
   <p><strong>Customize your Antigravity AI chat panel. Your IDE, your rules.</strong></p>
   <br>
-  <p>
-    <strong>English</strong> •
-    <a href="./README_ZH.md">中文</a>
-  </p>
   <p>
     <img src="https://img.shields.io/badge/version-0.2.10-brightgreen" alt="Version">
     <img src="https://img.shields.io/badge/dependencies-zero-green" alt="Zero Dependencies">
     <img src="https://img.shields.io/badge/file-single%20HTML-blue" alt="Single File">
     <img src="https://img.shields.io/badge/target-Antigravity-purple" alt="Antigravity">
-    <img src="https://img.shields.io/github/license/016/Antigravity-Better" alt="License">
+    <img src="https://img.shields.io/github/license/tomcandev/Antigravity-Better-1000X" alt="License">
     <br><br>
-    <a href="https://github.com/016/Antigravity-Better/releases"><img src="https://img.shields.io/badge/⬇️_Download-Latest_Release-brightgreen?style=for-the-badge" alt="Download"></a>
+    <a href="https://github.com/tomcandev/Antigravity-Better-1000X/releases"><img src="https://img.shields.io/badge/⬇️_Download-Latest_Release-brightgreen?style=for-the-badge" alt="Download"></a>
   </p>
 </div>
 
@@ -29,9 +24,9 @@
 
 ---
 
-## ✨ What is Antigravity Better?
+## ✨ What is Antigravity-Better-1000X?
 
-**Antigravity Better** is a lightweight, zero-dependency toolkit for customizing the AI chat panel in **Antigravity** - Google's new AI-powered IDE.
+**Antigravity-Better-1000X** is a lightweight, zero-dependency toolkit for customizing the AI chat panel in **Antigravity** - Google's new AI-powered IDE.
 
 We provide a **single HTML file** that you can drop into your IDE to unlock powerful customizations - without touching any source code or installing extensions.
 
@@ -68,7 +63,7 @@ You can freely customize this HTML file to build your own features. Following ou
 - **v0.1.4**: Adds font-size control and version check.
 - **v0.1.3**: Adds safety rules to block dangerous auto-executed commands.
 - **v0.1.2**: Adds auto-retry mechanism.
-- **v0.1.1**: First core feature set: custom colors, hotkey override, and i18n support.
+- **v0.1.1**: First core feature set: custom colors, hotkey override, and English support.
 
 ### For Developers
 
@@ -101,8 +96,8 @@ You can freely customize this HTML file to build your own features. Following ou
    # Backup original
    cp workbench.html workbench.html.bak
    
-   # Replace with Antigravity Better
-   cp /path/to/antigravity-better/app_root/workbench.html ./
+   # Replace with Antigravity-Better-1000X
+   cp /path/to/Antigravity-Better-1000X/app_root/workbench.html ./
    ```
 
 3. **Restart Antigravity** - Done! 🎉
@@ -131,11 +126,10 @@ Click the **⚙️ floating button** on the right side of your chat panel to ope
 
 - Switch between **Appearance** and **Features** tabs
 - Expand/collapse each feature section
-- Toggle language between English/中文
 
 ### Adding Your Own Features
 
-Antigravity Better is designed to be extended:
+Antigravity-Better-1000X is designed to be extended:
 
 ```html
 <style>
@@ -166,15 +160,6 @@ We welcome contributions! Whether it's:
 - 🔧 Pull requests
 - 📖 Documentation
 
-### 🌟 Contributors
-
-A huge thank you to all our amazing contributors! 💖
-
-| Contributor | Contribution | Date |
-|-------------|--------------|------|
-| [@moshouhot](https://github.com/moshouhot) | 🤖 Auto Accept + 🛡️ Safety Rules - Configurable button auto-click with dangerous command filtering | 2026-01-24 |
-| [@chengcodex](https://github.com/chengcodex) | 🔄 Auto Retry - Smart error detection and auto-retry with XPath optimization (merged into Auto Accept in v0.1.6) | 2026-01-23 |
-
 ---
 
 ## 📜 License
@@ -185,11 +170,10 @@ MIT License - Use it, modify it, share it.
 
 ## 🔗 Links
 
-- 🌐 Website: [dpit.lib00.com](https://dpit.lib00.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/016/Antigravity-Better/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/tomcandev/Antigravity-Better-1000X/issues)
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by the Antigravity Better Team</sub>
+  <sub>Built with ❤️ by the Antigravity-Better-1000X Team</sub>
 </div>

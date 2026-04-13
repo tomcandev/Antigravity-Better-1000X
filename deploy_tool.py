@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Antigravity Better 部署工具
-将 app_root/workbench.html 替换到 Antigravity 安装目录中的 workbench.html
-原文件备份为 workbench.html.origin
+Antigravity-Better-1000X Deployment Tool
+Replaces app_root/workbench.html into the Antigravity installation directory.
+The original file is backed up as workbench.html.origin
 """
 
 import os
@@ -11,11 +11,11 @@ import shutil
 import argparse
 from pathlib import Path
 
-# ================== 配置 ==================
-# 源文件相对路径（相对于脚本目录）
+# ================== Settings ==================
+# Relative path to source file (relative to script directory)
 SOURCE_RELATIVE_PATH = "app_root/workbench.html"
 
-# 目标目录搜索规则：在 Program Files 下查找 Antigravity
+# Target directory search rules: search under Program Files for Antigravity
 TARGET_SEARCH_PATHS = [
     Path(os.environ.get("ProgramFiles", "C:\\Program Files")) / "Antigravity" / "resources" / "app" / "out" / "vs" / "code" / "electron-browser" / "workbench",
     Path(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")) / "Antigravity" / "resources" / "app" / "out" / "vs" / "code" / "electron-browser" / "workbench",
@@ -27,21 +27,21 @@ BACKUP_SUFFIX = ".origin"
 
 
 def find_script_dir() -> Path:
-    """获取脚本所在目录"""
+    """Get script directory"""
     return Path(__file__).parent.resolve()
 
 
 def find_source_file() -> Path:
-    """查找源文件"""
+    """Find source file"""
     script_dir = find_script_dir()
     source_path = script_dir / SOURCE_RELATIVE_PATH
     if source_path.exists():
         return source_path
-    raise FileNotFoundError(f"源文件不存在: {source_path}")
+    raise FileNotFoundError(f"Source file not found: {source_path}")
 
 
 def find_target_dir() -> Path | None:
-    """自动查找目标目录"""
+    """Auto-detect target directory"""
     for path in TARGET_SEARCH_PATHS:
         if path.exists() and path.is_dir():
             target_file = path / TARGET_FILENAME
@@ -52,120 +52,120 @@ def find_target_dir() -> Path | None:
 
 def deploy(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
     """
-    执行部署操作
+    Execute deployment
     
     Args:
-        target_dir: 目标目录
-        dry_run: 仅模拟，不实际执行
+        target_dir: Target directory
+        dry_run: Dry run simulation only, do not write
         
     Returns:
-        (成功, 消息)
+        (Success, Message)
     """
     try:
         source_file = find_source_file()
         target_file = target_dir / TARGET_FILENAME
         backup_file = target_dir / (TARGET_FILENAME + BACKUP_SUFFIX)
         
-        # 检查目标文件
+        # Check target file
         if not target_file.exists():
-            return False, f"目标文件不存在: {target_file}"
+            return False, f"Target file not found: {target_file}"
         
-        # 备份原文件（如果备份不存在）
+        # Backup original file (if backup doesn't exist)
         if not backup_file.exists():
             if dry_run:
-                print(f"[DRY-RUN] 备份: {target_file} -> {backup_file}")
+                print(f"[DRY-RUN] Backup: {target_file} -> {backup_file}")
             else:
                 shutil.copy2(target_file, backup_file)
-                print(f"✅ 已备份: {backup_file}")
+                print(f"✅ Backed up: {backup_file}")
         else:
-            print(f"ℹ️ 备份已存在，跳过: {backup_file}")
+            print(f"ℹ️ Backup already exists, skipping: {backup_file}")
         
-        # 复制新文件
+        # Copy new file
         if dry_run:
-            print(f"[DRY-RUN] 复制: {source_file} -> {target_file}")
+            print(f"[DRY-RUN] Copy: {source_file} -> {target_file}")
         else:
             shutil.copy2(source_file, target_file)
-            print(f"✅ 已部署: {target_file}")
+            print(f"✅ Deployed: {target_file}")
         
-        return True, "部署成功！重启 Antigravity 生效。"
+        return True, "Deployment successful! Restart Antigravity to take effect."
         
     except Exception as e:
-        return False, f"部署失败: {e}"
+        return False, f"Deployment failed: {e}"
 
 
 def restore(target_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
     """
-    恢复原始文件
+    Restore original file
     
     Args:
-        target_dir: 目标目录
-        dry_run: 仅模拟，不实际执行
+        target_dir: Target directory
+        dry_run: Dry run simulation only, do not write
         
     Returns:
-        (成功, 消息)
+        (Success, Message)
     """
     try:
         target_file = target_dir / TARGET_FILENAME
         backup_file = target_dir / (TARGET_FILENAME + BACKUP_SUFFIX)
         
         if not backup_file.exists():
-            return False, f"备份文件不存在: {backup_file}"
+            return False, f"Backup file not found: {backup_file}"
         
         if dry_run:
-            print(f"[DRY-RUN] 恢复: {backup_file} -> {target_file}")
+            print(f"[DRY-RUN] Restore: {backup_file} -> {target_file}")
         else:
             shutil.copy2(backup_file, target_file)
-            print(f"✅ 已恢复: {target_file}")
+            print(f"✅ Restored: {target_file}")
         
-        return True, "恢复成功！重启 Antigravity 生效。"
+        return True, "Restoration successful! Restart Antigravity to take effect."
         
     except Exception as e:
-        return False, f"恢复失败: {e}"
+        return False, f"Restoration failed: {e}"
 
 
-# ================== CLI 模式 ==================
+# ================== CLI Mode ==================
 def run_cli():
-    """命令行模式入口"""
+    """CLI Entrypoint"""
     parser = argparse.ArgumentParser(
-        description="Antigravity Better 部署工具",
+        description="Antigravity-Better-1000X Deployment Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  python deploy_cascade.py deploy           # 自动查找并部署
-  python deploy_cascade.py deploy -t "D:\\..."  # 指定目标目录
-  python deploy_cascade.py restore          # 恢复原始文件
-  python deploy_cascade.py --gui            # 启动图形界面
+Examples:
+  python deploy_tool.py deploy               # Auto detect and deploy
+  python deploy_tool.py deploy -t "D:\\..."  # Specify target directory
+  python deploy_tool.py restore              # Restore original file
+  python deploy_tool.py --gui                # Launch GUI
         """
     )
     
     parser.add_argument("action", nargs="?", choices=["deploy", "restore", "status"],
-                        help="执行的操作: deploy=部署, restore=恢复, status=查看状态")
-    parser.add_argument("-t", "--target", type=str, help="指定目标目录路径")
-    parser.add_argument("-n", "--dry-run", action="store_true", help="仅模拟，不实际执行")
-    parser.add_argument("--gui", action="store_true", help="启动图形界面")
+                        help="Action: deploy, restore, status")
+    parser.add_argument("-t", "--target", type=str, help="Specify target directory path")
+    parser.add_argument("-n", "--dry-run", action="store_true", help="Dry run only")
+    parser.add_argument("--gui", action="store_true", help="Launch GUI")
     
     args = parser.parse_args()
     
-    # 启动 GUI
+    # Launch GUI
     if args.gui or args.action is None:
         run_gui()
         return
     
-    # 确定目标目录
+    # Determine target dir
     if args.target:
         target_dir = Path(args.target)
         if not target_dir.exists():
-            print(f"❌ 指定目录不存在: {target_dir}")
+            print(f"❌ Specified directory not found: {target_dir}")
             sys.exit(1)
     else:
         target_dir = find_target_dir()
         if not target_dir:
-            print("❌ 未找到 Antigravity 安装目录，请使用 -t 参数指定")
+            print("❌ Antigravity installation not found, please specify with -t")
             sys.exit(1)
     
-    print(f"📂 目标目录: {target_dir}")
+    print(f"📂 Target directory: {target_dir}")
     
-    # 执行操作
+    # Execute action
     if args.action == "deploy":
         success, msg = deploy(target_dir, args.dry_run)
     elif args.action == "restore":
@@ -173,28 +173,28 @@ def run_cli():
     elif args.action == "status":
         target_file = target_dir / TARGET_FILENAME
         backup_file = target_dir / (TARGET_FILENAME + BACKUP_SUFFIX)
-        print(f"目标文件: {target_file} ({'存在' if target_file.exists() else '不存在'})")
-        print(f"备份文件: {backup_file} ({'存在' if backup_file.exists() else '不存在'})")
+        print(f"Target file: {target_file} ({'Exists' if target_file.exists() else 'Missing'})")
+        print(f"Backup file: {backup_file} ({'Exists' if backup_file.exists() else 'Missing'})")
         return
     
     print(f"\n{'✅' if success else '❌'} {msg}")
     sys.exit(0 if success else 1)
 
 
-# ================== GUI 模式 ==================
+# ================== GUI Mode ==================
 def run_gui():
-    """图形界面模式"""
+    """GUI Mode"""
     import tkinter as tk
     from tkinter import ttk, filedialog, messagebox
     
     class DeployApp:
         def __init__(self, root):
             self.root = root
-            self.root.title("Antigravity Better 部署工具")
+            self.root.title("Antigravity-Better-1000X Deployment Tool")
             self.root.geometry("500x450")
             self.root.resizable(False, False)
             
-            # 尝试设置主题
+            # Attempt to set theme
             try:
                 self.root.tk.call("source", "azure.tcl")
                 ttk.Style().theme_use("azure-dark")
@@ -202,38 +202,38 @@ def run_gui():
                 pass
             
             self.target_dir = tk.StringVar()
-            self.status_text = tk.StringVar(value="就绪")
+            self.status_text = tk.StringVar(value="Ready")
             
             self.setup_ui()
             self.auto_detect_target()
         
         def setup_ui(self):
-            # 主框架
+            # Main frame
             main_frame = ttk.Frame(self.root, padding=20)
             main_frame.pack(fill=tk.BOTH, expand=True)
             
-            # 标题
-            title_label = ttk.Label(main_frame, text="🚀 Antigravity Better 部署工具", 
+            # Title
+            title_label = ttk.Label(main_frame, text="🚀 Antigravity-Better-1000X Deployment", 
                                     font=("Segoe UI", 14, "bold"))
             title_label.pack(pady=(0, 20))
             
-            # 源文件信息
-            source_frame = ttk.LabelFrame(main_frame, text="📁 源文件", padding=10)
+            # Source file info
+            source_frame = ttk.LabelFrame(main_frame, text="📁 Source File", padding=10)
             source_frame.pack(fill=tk.X, pady=(0, 10))
             
             try:
                 source_file = find_source_file()
                 source_text = str(source_file)
-                source_status = "✅ 已找到"
+                source_status = "✅ Found"
             except FileNotFoundError as e:
                 source_text = str(e)
-                source_status = "❌ 未找到"
+                source_status = "❌ Not Found"
             
             ttk.Label(source_frame, text=source_text, wraplength=430).pack(anchor=tk.W)
             ttk.Label(source_frame, text=source_status, foreground="green" if "✅" in source_status else "red").pack(anchor=tk.W)
             
-            # 目标目录
-            target_frame = ttk.LabelFrame(main_frame, text="🎯 目标目录", padding=10)
+            # Target directory
+            target_frame = ttk.LabelFrame(main_frame, text="🎯 Target Directory", padding=10)
             target_frame.pack(fill=tk.X, pady=(0, 10))
             
             path_frame = ttk.Frame(target_frame)
@@ -242,89 +242,89 @@ def run_gui():
             self.target_entry = ttk.Entry(path_frame, textvariable=self.target_dir, width=50)
             self.target_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
             
-            browse_btn = ttk.Button(path_frame, text="浏览...", command=self.browse_target)
+            browse_btn = ttk.Button(path_frame, text="Browse...", command=self.browse_target)
             browse_btn.pack(side=tk.RIGHT)
             
-            detect_btn = ttk.Button(target_frame, text="🔍 自动检测", command=self.auto_detect_target)
+            detect_btn = ttk.Button(target_frame, text="🔍 Auto Detect", command=self.auto_detect_target)
             detect_btn.pack(anchor=tk.W, pady=(5, 0))
             
-            # 操作按钮
+            # Action buttons
             btn_frame = ttk.Frame(main_frame)
             btn_frame.pack(pady=20)
             
-            deploy_btn = ttk.Button(btn_frame, text="📤 部署", command=self.do_deploy, width=15)
+            deploy_btn = ttk.Button(btn_frame, text="📤 Deploy", command=self.do_deploy, width=15)
             deploy_btn.pack(side=tk.LEFT, padx=10)
             
-            restore_btn = ttk.Button(btn_frame, text="📥 恢复原版", command=self.do_restore, width=15)
+            restore_btn = ttk.Button(btn_frame, text="📥 Restore", command=self.do_restore, width=15)
             restore_btn.pack(side=tk.LEFT, padx=10)
             
-            # 状态栏
+            # Status bar
             status_frame = ttk.Frame(main_frame)
             status_frame.pack(fill=tk.X, side=tk.BOTTOM)
             
-            ttk.Label(status_frame, text="状态:").pack(side=tk.LEFT)
+            ttk.Label(status_frame, text="Status:").pack(side=tk.LEFT)
             self.status_label = ttk.Label(status_frame, textvariable=self.status_text)
             self.status_label.pack(side=tk.LEFT, padx=5)
         
         def auto_detect_target(self):
-            """自动检测目标目录"""
+            """Auto detect target directory"""
             target = find_target_dir()
             if target:
                 self.target_dir.set(str(target))
-                self.status_text.set("✅ 已自动检测到目标目录")
+                self.status_text.set("✅ Target directory auto-detected")
             else:
-                self.status_text.set("⚠️ 未找到目标目录，请手动指定")
+                self.status_text.set("⚠️ Target directory not found, please specify")
         
         def browse_target(self):
-            """浏览选择目标目录"""
-            directory = filedialog.askdirectory(title="选择 Antigravity 扩展目录")
+            """Browse for target directory"""
+            directory = filedialog.askdirectory(title="Select Antigravity extension directory")
             if directory:
                 self.target_dir.set(directory)
         
         def do_deploy(self):
-            """执行部署"""
+            """Execute deployment"""
             target = self.target_dir.get().strip()
             if not target:
-                messagebox.showerror("错误", "请先指定目标目录")
+                messagebox.showerror("Error", "Please specify a target directory first")
                 return
             
             target_path = Path(target)
             if not target_path.exists():
-                messagebox.showerror("错误", f"目录不存在: {target}")
+                messagebox.showerror("Error", f"Directory does not exist: {target}")
                 return
             
             success, msg = deploy(target_path)
             if success:
-                messagebox.showinfo("成功", msg)
-                self.status_text.set("✅ 部署成功")
+                messagebox.showinfo("Success", msg)
+                self.status_text.set("✅ Deployment successful")
             else:
-                messagebox.showerror("失败", msg)
-                self.status_text.set("❌ 部署失败")
+                messagebox.showerror("Failed", msg)
+                self.status_text.set("❌ Deployment failed")
         
         def do_restore(self):
-            """执行恢复"""
+            """Execute restoration"""
             target = self.target_dir.get().strip()
             if not target:
-                messagebox.showerror("错误", "请先指定目标目录")
+                messagebox.showerror("Error", "Please specify a target directory first")
                 return
             
             target_path = Path(target)
             success, msg = restore(target_path)
             if success:
-                messagebox.showinfo("成功", msg)
-                self.status_text.set("✅ 已恢复原版")
+                messagebox.showinfo("Success", msg)
+                self.status_text.set("✅ Restoration successful")
             else:
-                messagebox.showerror("失败", msg)
-                self.status_text.set("❌ 恢复失败")
+                messagebox.showerror("Failed", msg)
+                self.status_text.set("❌ Restoration failed")
     
     root = tk.Tk()
     app = DeployApp(root)
     root.mainloop()
 
 
-# ================== 主入口 ==================
+# ================== Main Entrypoint ==================
 if __name__ == "__main__":
-    # 无参数时启动 GUI，有参数时进入 CLI
+    # Launch GUI when no arguments, otherwise CLI
     if len(sys.argv) == 1:
         run_gui()
     else:
